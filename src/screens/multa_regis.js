@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, TextInput, View, StyleSheet, Text, TouchableOpacity, Platform, Image } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ImagePicker from 'react-native-image-picker';
-import Voice from 'react-native-voice';
+import * as ImagePicker from 'expo-image-picker';
 
 const Multa_regis = () => {
   const [cedula, setCedula] = useState('');
@@ -17,12 +16,11 @@ const Multa_regis = () => {
   const [motivos, setMotivos] = useState([]);
   const [isFormValid, setIsFormValid] = useState(false);
   const [photo, setPhoto] = useState(null);
-  const [voiceRecording, setVoiceRecording] = useState(false);
 
   useEffect(() => {
     const fetchMotivos = async () => {
       try {
-        const response = await fetch('http://192.168.1.11:8080/api/v1/penalty');
+        const response = await fetch('http://10.0.0.41:8080/api/v1/penalty');
         const data = await response.json();
         setMotivos(data.penalties.map(item => item.id));
       } catch (error) {
@@ -48,11 +46,10 @@ const Multa_regis = () => {
         lon,
         fecha,
         hora,
-        photo,  // Nuevo campo para la foto
-        voiceRecording,  // Nuevo campo para la grabación de voz
+        photo,
       };
 
-      const response = await fetch(`http://192.168.1.11:8080/api/v1/penalties`, {
+      const response = await fetch(`http://10.0.0.41:8080/api/v1/penalties`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,6 +63,11 @@ const Multa_regis = () => {
 
       console.log('Multa registrada con éxito');
 
+      // Guardar la imagen en AsyncStorage
+      if (photo) {
+        await AsyncStorage.setItem(`multa_${id}_image`, photo);
+      }
+
       // Limpiar los campos después de enviar
       setCedula('');
       setPlaca('');
@@ -76,7 +78,6 @@ const Multa_regis = () => {
       setFecha(new Date().toLocaleDateString());
       setHora(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       setPhoto(null);
-      setVoiceRecording(false);
 
       // Deshabilitar el botón después de enviar
       setIsFormValid(false);
@@ -91,40 +92,26 @@ const Multa_regis = () => {
   };
 
   const validateForm = () => {
-    // Validar que todos los campos requeridos estén llenos
-    if (cedula && placa && motivo && comentario && lat && lon && fecha && hora && photo && voiceRecording) {
+    if (cedula && placa && motivo && comentario && lat && lon && fecha && hora && photo) {
       setIsFormValid(true);
     } else {
       setIsFormValid(false);
     }
   };
 
-  const selectPhoto = () => {
-    ImagePicker.showImagePicker({}, response => {
-      if (!response.didCancel && !response.error) {
-        setPhoto(response.uri);
-        validateForm();
-      }
-    });
-  };
+  const selectPhoto = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-  const startVoiceRecording = async () => {
-    try {
-      await Voice.start('es-ES'); // Puedes ajustar el idioma según tu necesidad
-      setVoiceRecording(true);
-      validateForm();
-    } catch (error) {
-      console.error('Error al iniciar la grabación de voz:', error.message);
+    if (permissionResult.granted === false) {
+      alert('Permission to access camera roll is required!');
+      return;
     }
-  };
 
-  const stopVoiceRecording = async () => {
-    try {
-      await Voice.stop();
-      setVoiceRecording(false);
+    const pickerResult = await ImagePicker.launchImageLibraryAsync();
+    
+    if (!pickerResult.cancelled) {
+      setPhoto(pickerResult.uri);
       validateForm();
-    } catch (error) {
-      console.error('Error al detener la grabación de voz:', error.message);
     }
   };
 
@@ -178,7 +165,6 @@ const Multa_regis = () => {
           <Text style={styles.dateTimeText}>{hora}</Text>
         </TouchableOpacity>
       </View>
-      {/* Campo de Foto */}
       <TouchableOpacity onPress={selectPhoto}>
         <Text style={styles.dateTimeText}>Seleccionar Foto</Text>
       </TouchableOpacity>
@@ -187,13 +173,6 @@ const Multa_regis = () => {
           <Image source={{ uri: photo }} style={styles.image} />
         )}
       </View>
-
-      {/* Campo de Voz */}
-      <TouchableOpacity onPress={voiceRecording ? stopVoiceRecording : startVoiceRecording}>
-        <Text style={styles.voiceButton}>
-          {voiceRecording ? 'Detener Grabación de Voz' : 'Iniciar Grabación de Voz'}
-        </Text>
-      </TouchableOpacity>
       <Button
         title="Registrar multa"
         onPress={submitPenalty}
@@ -256,19 +235,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   image: {
-    width: 200,
-    height: 200,
+    width: 75,
+    height: 75,
     borderRadius: 8,
-  },
-  voiceButton: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    justifyContent: 'center',
-    textAlignVertical: 'center',
-    marginBottom: 12,
   },
 });
 

@@ -7,7 +7,7 @@ const ConsultaVehiculo = () => {
 
   const fetchVehicleData = async () => {
     try {
-      const response = await fetch(`http:///192.168.1.11:8080/api/v1/vehicle/${plate}`);
+      const response = await fetch(`http:///10.0.0.41:8080/api/v1/vehicle/${plate}`);
       const json = await response.json();
       if (json.ok) {
         setVehicle(json.vehicle);

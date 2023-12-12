@@ -9,7 +9,7 @@ const Tarifario = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://192.168.1.11:8080/api/v1/penalty');
+        const response = await fetch('http://10.0.0.41:8080/api/v1/penalty');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

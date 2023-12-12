@@ -21,7 +21,7 @@ const Login = ({ navigation }) => {
   
     try {
       console.log('Enviando solicitud de inicio de sesión...');
-      const response = await fetch('http://192.168.1.11:8080/api/v1/login', {
+      const response = await fetch('http://10.0.0.41:8080/api/v1/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

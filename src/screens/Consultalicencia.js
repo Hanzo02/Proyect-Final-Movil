@@ -7,7 +7,7 @@ const Consultalicencia = () => {
 
   const fetchDriverData = async () => {
     try {
-      const response = await fetch(`http://192.168.1.11:8080/api/v1/conductor/${license}`);
+      const response = await fetch(`http://10.0.0.41:8080/api/v1/conductor/${license}`);
       const json = await response.json();
       if (json.ok) {
         setDriver(json.conductor);

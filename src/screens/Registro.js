@@ -26,7 +26,7 @@ const Registro = ({ navigation }) => {
 
     try {
       console.log('Enviando solicitud de registro...');
-      const response = await fetch('http://192.168.1.11:8080/api/v1/register', {
+      const response = await fetch('http://10.0.0.41:8080/api/v1/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
